@@ -3,10 +3,10 @@ import { rsaPsw } from '@/utils';
 import { Button, Checkbox, Form, Input } from 'antd';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon, useNavigate } from 'umi';
+import { useNavigate } from 'umi';
 import RightPanel from './right-panel';
 
-import { Domain } from '@/constants/common';
+// import { Domain } from '@/constants/common';
 import styles from './index.less';
 
 const Login = () => {
@@ -15,7 +15,7 @@ const Login = () => {
   const { login, loading: signLoading } = useLogin();
   const { register, loading: registerLoading } = useRegister();
   const { t } = useTranslation('translation', { keyPrefix: 'login' });
-  const loading = signLoading || registerLoading;
+  const loading = signLoading; //|| registerLoading;
 
   const changeTitle = () => {
     setTitle((title) => (title === 'login' ? 'register' : 'login'));
@@ -40,16 +40,17 @@ const Login = () => {
         if (retcode === 0) {
           navigate('/knowledge');
         }
-      } else {
-        const retcode = await register({
-          nickname: params.nickname,
-          email: params.email,
-          password: rsaPassWord,
-        });
-        if (retcode === 0) {
-          setTitle('login');
-        }
       }
+      //  else {
+      //   const retcode = await register({
+      //     nickname: params.nickname,
+      //     email: params.email,
+      //     password: rsaPassWord,
+      //   });
+      //   if (retcode === 0) {
+      //     setTitle('login');
+      //   }
+      // }
     } catch (errorInfo) {
       console.log('Failed:', errorInfo);
     }
@@ -118,7 +119,7 @@ const Login = () => {
                 <Checkbox> {t('rememberMe')}</Checkbox>
               </Form.Item>
             )}
-            <div>
+            {/* <div>
               {title === 'login' && (
                 <div>
                   {t('signInTip')}
@@ -135,7 +136,7 @@ const Login = () => {
                   </Button>
                 </div>
               )}
-            </div>
+            </div> */}
             <Button
               type="primary"
               block
@@ -161,7 +162,7 @@ const Login = () => {
                     Sign in with Google
                   </div>
                 </Button> */}
-                {location.host === Domain && (
+                {/* {location.host === Domain && (
                   <Button
                     block
                     size="large"
@@ -176,7 +177,7 @@ const Login = () => {
                       Sign in with Github
                     </div>
                   </Button>
-                )}
+                )} */}
               </>
             )}
           </Form>

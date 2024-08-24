@@ -1,56 +1,65 @@
+# 基础镜像
 FROM ubuntu:22.04
+
+# 切换到 root 用户
 USER root
 
+# 设置工作目录
 WORKDIR /ragflow
 
-RUN apt-get update && apt-get install -y wget curl build-essential libopenmpi-dev
-
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+# 更新包管理器并安装基本工具和依赖
+RUN apt-get update && \
+    apt-get install -y wget curl git build-essential libopenmpi-dev openmpi-bin openmpi-common \
+    libglib2.0-0 libgl1-mesa-glx nginx && \
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
     bash ~/miniconda.sh -b -p /root/miniconda3 && \
-    rm ~/miniconda.sh && ln -s /root/miniconda3/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    rm ~/miniconda.sh && \
+    ln -s /root/miniconda3/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /root/miniconda3/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    echo "conda activate base" >> ~/.bashrc
+    echo "conda activate base" >> ~/.bashrc && \
+    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
+# 设置 Conda 环境变量
 ENV PATH /root/miniconda3/bin:$PATH
 
+# 创建 Python 3.11 环境
 RUN conda create -y --name py11 python=3.11
 
+# 配置 Conda 环境
 ENV CONDA_DEFAULT_ENV py11
 ENV CONDA_PREFIX /root/miniconda3/envs/py11
 ENV PATH $CONDA_PREFIX/bin:$PATH
-
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
-RUN apt-get install -y nodejs
-
-RUN apt-get install -y nginx
-
-ADD ./web ./web
-ADD ./api ./api
-ADD ./conf ./conf
-ADD ./deepdoc ./deepdoc
-ADD ./rag ./rag
-ADD ./requirements.txt ./requirements.txt
-ADD ./agent ./agent
-ADD ./graphrag ./graphrag
-
-RUN apt install openmpi-bin openmpi-common libopenmpi-dev
 ENV LD_LIBRARY_PATH /usr/lib/x86_64-linux-gnu/openmpi/lib:$LD_LIBRARY_PATH
-RUN rm /root/miniconda3/envs/py11/compiler_compat/ld
-RUN cd ./web && npm i --force && npm run build
+
+# 安装 Python 依赖
+ADD ./requirements.txt ./requirements.txt
 RUN conda run -n py11 pip install -i https://mirrors.aliyun.com/pypi/simple/ -r ./requirements.txt
-
-RUN apt-get update && \
-    apt-get install -y libglib2.0-0 libgl1-mesa-glx && \
-    rm -rf /var/lib/apt/lists/*
-
 RUN conda run -n py11 pip install -i https://mirrors.aliyun.com/pypi/simple/ ollama
 RUN conda run -n py11 python -m nltk.downloader punkt
 RUN conda run -n py11 python -m nltk.downloader wordnet
 
+# 安装前端依赖并构建
+ADD ./web ./web
+RUN rm /root/miniconda3/envs/py11/compiler_compat/ld
+RUN cd ./web && npm i --force && npm run build
+
+# 复制项目文件
+ADD ./api ./api
+ADD ./conf ./conf
+ADD ./deepdoc ./deepdoc
+ADD ./rag ./rag
+ADD ./agent ./agent
+ADD ./graphrag ./graphrag
+
+# 设置 Python 路径和其他环境变量
 ENV PYTHONPATH=/ragflow/
 ENV HF_ENDPOINT=https://hf-mirror.com
 
+# 复制并设置入口脚本
 ADD docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
+# 设置容器启动时的默认入口点
 ENTRYPOINT ["./entrypoint.sh"]

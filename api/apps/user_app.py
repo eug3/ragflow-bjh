@@ -73,7 +73,7 @@ def login():
                                retmsg='Email and password do not match!')
 
 
-@manager.route('/github_callback', methods=['GET'])
+#@manager.route('/github_callback', methods=['GET'])
 def github_callback():
     import requests
     res = requests.post(GITHUB_OAUTH.get("url"),
@@ -134,7 +134,7 @@ def github_callback():
     return redirect("/?auth=%s" % user.get_id())
 
 
-@manager.route('/feishu_callback', methods=['GET'])
+#@manager.route('/feishu_callback', methods=['GET'])
 def feishu_callback():
     import requests
     app_access_token_res = requests.post(FEISHU_OAUTH.get("app_access_token_url"),
@@ -347,12 +347,12 @@ def user_register(user_id, user):
     return UserService.query(email=user["email"])
 
 
-@manager.route("/register", methods=["POST"])
-@validate_request("nickname", "email", "password")
+# @manager.route("/register", methods=["POST"])
+# @validate_request("nickname", "email", "password")
 def user_add():
+    
     req = request.json
     email_address = req["email"]
-
     # Validate the email address
     if not re.match(r"^[\w\._-]+@([\w_-]+\.)+[\w-]{2,4}$", email_address):
         return get_json_result(data=False,
